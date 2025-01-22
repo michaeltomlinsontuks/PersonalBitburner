@@ -1,0 +1,10 @@
+1. Two States: Buy and Upgrade
+2. Buy: The max number of servers is 25, buy 25 8GB servers
+3. Once all servers are bought, upgrade all servers to 16GB
+4. Double RAM every time
+5. Make sure the script can be run at any time, post buy phase and mid upgrade phase
+6. When in upgrade phase, check for lowest RAM server and upgrade it,
+    loop until all servers are same level.
+    - This needs to be done every time the script is run
+    - to get everything back in sync
+7. When all servers are same level, upgrade all servers to next level

@@ -1,0 +1,9 @@
+Batch Manager Process:
+1. findServers
+2. checkRootAccess
+3. pickServer - from rootAccessServers
+4. Calculate Batch Timing - Check how many threads are available - Weakness time, Grow Time
+5. prepServer - Weakens and Grows on many threads
+6. harvestServer - Hacks on many threads
+7. pickServer - from rootAccessServers
+8. repeat 4-7 indefinitely
