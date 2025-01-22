@@ -1,0 +1,5 @@
+1. Find Servers and Unlock Everything - Should take 10/20 seconds
+2. Start manager to assign basic to all servers
+3. As money comes in run purchaseServers - Let it run every 10 seconds
+4. As more servers are available keep assigning basic through manager to all servers - check every minute
+5. Keep checking if new servers are available with checkRootAccess - check every 2 minutes
