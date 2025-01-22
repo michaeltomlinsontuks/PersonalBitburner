@@ -1,23 +1,20 @@
-//Recursive Server Searching
-//This function will search for servers in the network and store all servers found in AllServers.json
-
-
-export async function findServers(ns, server = 'home'){
-    let allServers = ns.read('AllServers.json');
-    let currentServers = ns.scan('home');
-    for (let i = 0; i < currentServers.length; i++){
-        if (allServers.indexOf(currentServers[i]) === -1){
+/** @param {NS} ns **/
+export async function findServers(ns, server = 'home') {
+    let allServers = JSON.parse(ns.read('AllServers.json') || '[]');
+    let currentServers = ns.scan(server);
+    for (let i = 0; i < currentServers.length; i++) {
+        if (allServers.indexOf(currentServers[i]) === -1) {
             allServers.push(currentServers[i]);
-            ns.write('AllServers.json', allServers);
+            ns.write('AllServers.json', JSON.stringify(allServers), 'w');
             await findServers(ns, currentServers[i]);
         }
     }
 }
 
-export async function main(ns){
+/** @param {NS} ns **/
+export async function main(ns) {
     let allServers = [];
-    ns.write('AllServers.json', allServers);
+    ns.write('AllServers.json', JSON.stringify(allServers), 'w');
     await findServers(ns);
     ns.tprint('All Servers Found');
 }
-

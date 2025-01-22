@@ -1,23 +1,25 @@
-export async function main (ns) {
-//reads the AllServers.json file and stores it in the allServers variable
-    let allServers = ns.read('AllServers.json');
+/** @param {NS} ns **/
+export async function main(ns) {
+    // Reads the AllServers.json file and stores it in the allServers variable
+    let allServers = JSON.parse(ns.read('AllServers.json') || '[]');
     let rootedServers = [];
-    let server = allServers[0];
+    let server;
     let i = 0;
-    while(server!==allServers[allServers.length-1]){
+
+    while (i < allServers.length) {
+        server = allServers[i];
         if (ns.hasRootAccess(server)) {
             rootedServers.push(server);
-            i++;
-        } else if(gainRootAccess(ns, server)){
+        } else if (await gainRootAccess(ns, server)) {
             rootedServers.push(server);
-            i++;
-        } else{
-            i++;
         }
+        i++;
     }
-    ns.write('RootedServers.json', rootedServers);
+
+    ns.write('RootedServers.json', JSON.stringify(rootedServers), 'w');
 }
 
+/** @param {NS} ns **/
 export async function gainRootAccess(ns, server) {
     let i = 0;
 
