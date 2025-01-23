@@ -1,5 +1,3 @@
-import { gainRootAccess } from '/General/gainRootAccess.js';
-
 //this is the function that will run initially
 import { gainRootAccess } from '/General/gainRootAccess.js';
 
@@ -53,9 +51,9 @@ export async function checkRootAccess(ns) {
         }
     });
     // now run findServers on each of the new servers
-    newServers.forEach(async s => {
+    for (const s of newServers) {
         await findServers(ns, s, "home", maxLevel);
-    });
+    }
     // need to reload allServers after adding new servers
     allServers = JSON.parse(ns.read('AllServers.json') || '[]');
     // now check if any servers need to be rooted
