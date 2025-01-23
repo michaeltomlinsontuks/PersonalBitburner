@@ -1,4 +1,9 @@
 export async function gainRootAccess(ns, server) {
+
+    if(ns.hasRootAccess(server)){
+        return true;
+    }
+
     let i = 0;
 
     if (ns.fileExists("BruteSSH.exe", "home")) {
