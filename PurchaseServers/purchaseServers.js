@@ -53,10 +53,16 @@ export async function purchaseServers(ns, state) {
             ns.deleteServer(lowestRamServer);
             // Purchase server
             ns.purchaseServer(lowestRamServer, lowestRam * 2);
-            // Update purchasedServers.json
+            // Update purchasedServers.json - while looping through find the new lowestRamServer
+            let nextLowestRamServer = '';
+            let nextLowestRam = lowestRam * 2;
             purchasedServers.forEach(s => {
                 if(s.server == lowestRamServer){
                     s.ram = lowestRam * 2;
+                }
+                if(s.ram < nextLowestRam){
+                    nextLowestRam = s.ram;
+                    nextLowestRamServer = s.server;
                 }
             });
             //update purchasedServers.json
@@ -69,6 +75,9 @@ export async function purchaseServers(ns, state) {
                 }
             });
             ns.write('RootedServers.json', JSON.stringify(rootedServers), 'w');
+            //update lowestRamServer
+            lowestRam = nextLowestRam;
+            lowestRamServer = nextLowestRamServer;
         }
     }
 }
