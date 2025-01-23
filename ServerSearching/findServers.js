@@ -19,10 +19,11 @@ export async function findServers(ns, server="home", originServer="home", level=
     for (const s of accessableServers) {
         // Gain root access on server
         if (await gainRootAccess(ns, s)) {
-            // Add to rooted servers
+            // Add to rooted servers - rooted servers also store the ram of the server
+            // Each server has a server name and a ram value
+            let sRam = ns.getServerRam(s);
             let rootedServers = JSON.parse(ns.read('RootedServers.json') || '[]');
-            rootedServers.push(s);
-            ns.write('RootedServers.json', JSON.stringify(rootedServers), 'w');
+            rootedServers.push({ server: s, ram: sRam });
         }
         // Recursively find servers
         await findServers(ns, s, server, level + 1);
@@ -61,7 +62,8 @@ export async function checkRootAccess(ns) {
     let potentialRoots = allServers.filter(s => !rootedServers.includes(s.server));
     for (const s of potentialRoots) {
         if (await gainRootAccess(ns, s.server)) {
-            rootedServers.push(s.server);
+            let sRam = ns.getServerRam(s.server);
+            rootedServers.push({ server: s.server, ram: sRam });
             ns.write('RootedServers.json', JSON.stringify(rootedServers), 'w');
         }
     }

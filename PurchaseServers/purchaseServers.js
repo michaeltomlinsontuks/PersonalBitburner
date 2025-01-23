@@ -1,70 +1,74 @@
-/** @param {NS} ns **/
-export async function main(ns) {
-    const maxServers = 25;
-    let serverCount = ns.getPurchasedServers().length;
-    let state = serverCount < maxServers ? "buying" : "upgrading";
-    let ramSize = 8; // Starting RAM size for new servers
 
-    // Helper function to check if you can afford a server with the current RAM size
-    function canAffordServer(ramSize) {
-        return ns.getServerMoneyAvailable("home") >= ns.getPurchasedServerCost(ramSize);
-    }
+//when called on the function will be told if it is buying or upgrading servers
+//bought servers will be added to the allServers.json file - level 0
+//bought servers will be added to the rootedServers.json file
+//bought servers will be added to the purchasedServers.json file - with their current ram
+export async function purchaseServers(ns, state) {
+    //numServers is the number of servers in the purchasedServers.json file
+    let purchasedServers = JSON.parse(ns.read('PurchasedServers.json') || '[]');
+    let numServers = purchasedServers.length;
 
-    // Helper function to check if you can afford upgrading a server with the next RAM size
-    function canAffordUpgrade(ramSize) {
-        return ns.getServerMoneyAvailable("home") >= ns.getPurchasedServerCost(ramSize * 2);
-    }
+    // Buying State = 0
+    if(state == 0){
+        // Buy as many 8GB servers as possible
+        while(ns.getPurchasedServerCost(8) <= ns.getServerMoneyAvailable('home') && numServers < 25){
+            // Purchase server
+            // pserv-numServers = server name
+            let serverName = 'pserv-' + numServers;
+            ns.purchaseServer(serverName, 8);
+            // Add server to allServers.json
+            ns.write('AllServers.json', JSON.stringify([{ server: serverName, level: 0 }]), 'a');
 
-    // Main loop
-    while (true) {
-        if (state === "buying") {
-            // Handle buying servers state
-            if (serverCount < maxServers && canAffordServer(ramSize)) {
-                // Purchase a new server
-                let serverName = `pserv-${serverCount}`;
-                ns.purchaseServer(serverName, ramSize);
-                ns.tprint(`Purchased server: ${serverName}`);
-                await ns.exec("findServers.js", "home");
-                await ns.exec("checkRootAccess.js", "home");
-                await ns.exec("manager.js", "home");
-                serverCount++;
-            }
+            // Add server to rootedServers.json
+            ns.write('rootedServers.json', JSON.stringify([{ server: serverName, ram: 8 }]), 'a');
 
-            // If we've bought all 25 servers, switch to upgrading state
-            if (serverCount === maxServers) {
-                state = "upgrading";
-                ns.tprint("All servers purchased, switching to upgrading state...");
-            }
-        } else if (state === "upgrading") {
-            // Handle upgrading servers state
-            let allUpgraded = true;
-            for (let i = 0; i < maxServers; i++) {
-                let serverName = `pserv-${i}`;
-                if (ns.serverExists(serverName)) {
-                    const currentRam = ns.getServerMaxRam(serverName);
-                    if (currentRam < ramSize * 2) {
-                        allUpgraded = false;
-                        if (canAffordUpgrade(ramSize)) {
-                            ns.killall(serverName);
-                            ns.deleteServer(serverName);
-                            ns.purchaseServer(serverName, ramSize * 2); // Upgrade to double RAM
-                            await ns.exec("manager.js", "home");
-                            ns.tprint(`Upgraded server: ${serverName} to ${ramSize * 2} GB RAM`);
-                        } else {
-                            ns.tprint(`Cannot afford upgrade for ${serverName}, waiting for funds...`);
-                            await ns.sleep(20000);  // Wait 20 seconds before retrying
-                            break; // Exit the loop temporarily to check the condition again
-                        }
-                    }
-                }
-            }
-
-            if (allUpgraded) {
-                ramSize *= 2; // Double the RAM size for the next round
-                ns.tprint(`All servers upgraded to ${ramSize} GB, preparing for next upgrade...`);
-            }
+            // Add server to purchasedServers.json
+            ns.write('PurchasedServers.json', JSON.stringify([{ server: serverName, ram: 8 }]), 'a');
+            numServers++;
         }
-
-        await ns.sleep(1000); // Wait for 1 second before checking again
+        return numServers == 25;
+    }
+    // Upgrading State = 1
+    else if (state == 1){
+        //Find the lowest ram server and upgrade it - continue until out of money
+        //Upgrading includes:
+            //killing all running scripts on the server
+            //deleting the server
+            //purchasing a new server with double the ram
+            //updating the ram in the purchasedServers.json file
+            //updating the ram in the rootedServers.json file
+        purchasedServers = JSON.parse(ns.read('PurchasedServers.json') || '[]');
+        let lowestRam = 8;
+        let lowestRamServer = '';
+        purchasedServers.forEach(s => {
+            if(s.ram < lowestRam){
+                lowestRam = s.ram;
+                lowestRamServer = s.server;
+            }
+        });
+        while(ns.getPurchasedServerCost(lowestRam * 2) <= ns.getServerMoneyAvailable('home')){
+            // Kill all scripts
+            ns.killall(lowestRamServer);
+            // Delete server
+            ns.deleteServer(lowestRamServer);
+            // Purchase server
+            ns.purchaseServer(lowestRamServer, lowestRam * 2);
+            // Update purchasedServers.json
+            purchasedServers.forEach(s => {
+                if(s.server == lowestRamServer){
+                    s.ram = lowestRam * 2;
+                }
+            });
+            //update purchasedServers.json
+            ns.write('PurchasedServers.json', JSON.stringify(purchasedServers), 'w');
+            //update rootedServers.json
+            let rootedServers = JSON.parse(ns.read('RootedServers.json') || '[]');
+            rootedServers.forEach(s => {
+                if(s.server == lowestRamServer){
+                    s.ram = lowestRam * 2;
+                }
+            });
+            ns.write('RootedServers.json', JSON.stringify(rootedServers), 'w');
+        }
     }
 }
