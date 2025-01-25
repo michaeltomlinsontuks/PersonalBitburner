@@ -1,10 +1,14 @@
 /** @param {NS} ns **/
-export async function earlyPickServer(ns, servers) {
+export async function earlyPickServer(ns) {
     let bestTarget = null;
     let bestScore = -Infinity;
     const playerHackLevel = ns.getHackingLevel();
+    //accesses the list of servers
+    const servers =  JSON.parse(ns.read('RootedServers.json') || '[]');
 
-    for (const server of servers) {
+    //server needs to the server name from the json file
+    for (const serverObj of servers) {
+        const server = serverObj.server;
         const maxMoney = ns.getServerMaxMoney(server);
         const currentMoney = ns.getServerMoneyAvailable(server);
         const minSecurity = ns.getServerMinSecurityLevel(server);

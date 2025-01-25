@@ -1,5 +1,7 @@
 //this is the function that will run initially
-import { gainRootAccess } from '/General/gainRootAccess.js';
+import { gainRootAccess } from 'gainRootAccess.js';
+import {scriptAssignServer} from "scriptAssigner.js";
+import {earlyPickServer} from "earlyPickServer.js";
 
 export async function findServers(ns, server="home", originServer="home", level=0) {
     let accessableServers = ns.scan(server);
@@ -21,9 +23,10 @@ export async function findServers(ns, server="home", originServer="home", level=
         if (await gainRootAccess(ns, s)) {
             // Add to rooted servers - rooted servers also store the ram of the server
             // Each server has a server name and a ram value
-            let sRam = ns.getServerRam(s);
+            let sRam = ns.getServerMaxRam(s);
             let rootedServers = JSON.parse(ns.read('RootedServers.json') || '[]');
             rootedServers.push({ server: s, ram: sRam });
+            ns.write('RootedServers.json', JSON.stringify(rootedServers), 'w');
         }
         // Recursively find servers
         await findServers(ns, s, server, level + 1);
@@ -39,30 +42,12 @@ export async function checkRootAccess(ns) {
     // Reads the AllServers.json file and stores it in the allServers variable
     // Need to find the highest level searched and only keep those servers, then search 1 level deeper on those servers
     let allServers = JSON.parse(ns.read('AllServers.json') || '[]');
-    let maxLevel = 0;
-    allServers.forEach(s => {
-        if (s.level > maxLevel) {
-            maxLevel = s.level;
-        }
-    });
-    let newServers = [];
-    allServers.forEach(s => {
-        if (s.level === maxLevel) {
-            newServers.push(s.server);
-        }
-    });
-    // now run findServers on each of the new servers
-    for (const s of newServers) {
-        await findServers(ns, s, "home", maxLevel);
-    }
-    // need to reload allServers after adding new servers
-    allServers = JSON.parse(ns.read('AllServers.json') || '[]');
     // now check if any servers need to be rooted
     let rootedServers = JSON.parse(ns.read('RootedServers.json') || '[]');
     let potentialRoots = allServers.filter(s => !rootedServers.includes(s.server));
     for (const s of potentialRoots) {
         if (await gainRootAccess(ns, s.server)) {
-            let sRam = ns.getServerRam(s.server);
+            let sRam = ns.getServerMaxRam(s.server);
             rootedServers.push({ server: s.server, ram: sRam });
             ns.write('RootedServers.json', JSON.stringify(rootedServers), 'w');
         }
