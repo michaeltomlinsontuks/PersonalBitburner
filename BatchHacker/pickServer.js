@@ -30,6 +30,7 @@ export async function printServerStats(ns, target) {
     const security = server.hackDifficulty;
     const baseSecurity = server.baseDifficulty;
 
+    const threads
     //Key Metrics
     //Time to Prep
         //Lowest Security Level
