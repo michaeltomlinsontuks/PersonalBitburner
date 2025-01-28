@@ -2,6 +2,7 @@
 //current money, current security,
 //required hacking level, player hacking level
 //player hacking multipliers
+import {threadCalc} from "threadCalc.js";
 
 export async function printServerStats(ns, target) {
     const server = ns.getServer(target);
@@ -30,7 +31,7 @@ export async function printServerStats(ns, target) {
     const security = server.hackDifficulty;
     const baseSecurity = server.baseDifficulty;
 
-    const threads
+    const threads = threadCalc(ns, "basic.js");
     //Key Metrics
     //Time to Prep
         //Lowest Security Level
@@ -38,4 +39,20 @@ export async function printServerStats(ns, target) {
     //Time to Hack
     //Money Benefit
 
+}
+
+export async function pickServer(ns, target) {
+
+}
+
+export async function timeToPrep(ns, target) {
+    //time to weaken to minimum security
+    //time to grow to max money
+    //total time to prep - need to adjust for the increase in security from growing
+
+    const weakenTime = ns.getWeakenTime(target);
+    const weakenAnalyze = ns.weakenAnalyze(1);
+    const minSecurity = server.minDifficulty;
+    const security = server.hackDifficulty;
+    const baseSecurity = server.baseDifficulty;
 }
